@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Project Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      background: #eef2f7;
+    }
+
+    /* Left Panel */
+    .left-panel {
+      flex: 1;
+      background: url("https://images.unsplash.com/photo-1522202176988-66273c2fd55f") no-repeat center center/cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-align: center;
+      padding: 40px;
+      position: relative;
+    }
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    .left-panel div { position: relative; z-index: 1; }
+    .left-panel h1 { font-size: 42px; font-weight: 700; margin-bottom: 10px; line-height: 1.2; }
+    .left-panel p { font-size: 18px; opacity: 0.9; }
+
+    /* Right Panel */
+    .right-panel {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #ffffff;
+      padding: 40px;
+    }
+
+    .form-container {
+      width: 100%;
+      max-width: 400px;
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .form-container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    }
+
+    h2 { text-align: center; margin-bottom: 30px; font-weight: 600; color: #333; font-size: 28px; }
+
+    label { font-size: 14px; font-weight: 500; display: block; margin: 10px 0 5px; }
+    input, select {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    input:focus, select:focus {
+      border-color: #0072ff;
+      box-shadow: 0 0 10px rgba(0, 114, 255, 0.2);
+      outline: none;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #0072ff, #00c6ff);
+      border: none;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .submit-btn:hover {
+      opacity: 0.95;
+      transform: scale(1.03);
+      box-shadow: 0 8px 20px rgba(0, 114, 255, 0.3);
+    }
+
+    .extra-links { text-align: center; margin-top: 18px; font-size: 14px; color: #666; }
+    .extra-links a { color: #0072ff; text-decoration: none; font-weight: 500; margin-left: 5px; }
+    .extra-links a:hover { text-decoration: underline; }
+
+    @media (max-width: 900px) {
+      body { flex-direction: column; }
+      .left-panel, .right-panel { flex: none; width: 100%; height: 50vh; }
+      .form-container { margin-top: -50px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left Panel -->
+  <div class="left-panel">
+    <div>
+      <h1>Welcome Back!</h1>
+      <p>Login to manage your projects, tasks, and progress efficiently</p>
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="right-panel">
+    <div class="form-container">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="Enter your email" required>
+
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter password" required>
+
+        <label>Select Role</label>
+        <select id="role" required>
+          <option value="">-- Select Role --</option>
+          <option value="team">Student (Team)</option>
+          <option value="faculty">Faculty</option>
+          <option value="coordinator">Project Coordinator</option>
+        </select>
+
+        <button type="submit" class="submit-btn">Login</button>
+
+        <div class="extra-links">
+          <p>Don’t have an account? <a href="index.html">Register here</a></p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async function(e){
+      e.preventDefault();
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+
+      if(!role){
+        alert("Please select a role");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, role })
+        });
+
+        const data = await res.json();
+
+        if(res.ok){
+          localStorage.setItem("token", data.token);
+          window.location.href = data.redirect; // Redirects automatically
+        } else {
+          alert(data.error);
+        }
+      } catch(err){
+        console.error(err);
+        alert("Server error, try again later.");
+      }
+    });
+  </script>
+
+</body>
+</html>
