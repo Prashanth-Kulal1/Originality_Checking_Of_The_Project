@@ -6,6 +6,7 @@
     <title>Faculty Dashboard | Project Management</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
     <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -273,6 +274,63 @@
 .marks-input-group div {
   flex: 0.5;
 }
+
+
+.chat-box {
+  height: 350px;
+  overflow-y: auto;
+  background: #1e1e2f;
+  padding: 15px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* message bubble */
+.message {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+
+/* team (left) */
+.message.team {
+  align-self: flex-start;
+  background: #2f2f56;
+  color: #fff;
+}
+
+/* faculty (right) */
+.message.faculty {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #00ffd5, #00aaff);
+  color: #000;
+  font-weight: 500;
+}
+
+/* sender name */
+.sender {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-bottom: 3px;
+}
+
+/* input area */
+.chat-input-container {
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input-container input {
+  flex: 1;
+}
+
+.chat-input-container button {
+  width: auto;
+}
 </style>
 
 
@@ -286,6 +344,7 @@
       <a onclick="showSection('tasks')">📝 Assign Tasks</a>
       <a onclick="showSection('approvals')">✅ Update Approvals</a>
       <a onclick="showSection('feedback')">💬 Give Feedback</a>
+      <a onclick="showSection('chat')">💬 Chat</a>
       <a onclick="showSection('marks')">🏆 Assign Marks</a>
       <a onclick="showSection('novelty')">🧠 Novelty Check</a>
       <a onclick="showSection('projectIdeas')">📌 Project Ideas</a>
@@ -306,6 +365,19 @@
             <th>Latest Progress</th>
           </tr>
         </table>
+      </div>
+
+      <div id="chat" class="section">
+        <h2>💬 Chat with Team</h2>
+
+        <select id="chatTeamSelect"></select>
+
+        <div id="chatBox" class="chat-box"></div>
+
+        <div class="chat-input-container">
+        <input type="text" id="chatInput" placeholder="Type message..." />
+        <button onclick="sendMessage()">Send</button>
+      </div>
       </div>
 
       <!-- Progress History Section -->
@@ -381,6 +453,16 @@
       </div>
       
           <script>
+
+          
+// ⭐ GET TOKEN FROM URL (Google login)
+const urlParams = new URLSearchParams(window.location.search);
+const urlToken = urlParams.get("token");
+
+if (urlToken) {
+  localStorage.setItem("token", urlToken);
+}
+
 let allocatedTeamsData = [];
 const token = localStorage.getItem("token");
 if (!token) window.location.href = "login.html";
@@ -807,6 +889,16 @@ function populateAllDropdowns() {
       dropdown.appendChild(opt);
     });
   });
+  const chatDropdown = document.getElementById("chatTeamSelect");
+  if (chatDropdown) {
+    chatDropdown.innerHTML = `<option value="">-- Select Team --</option>`;
+    allocatedTeamsData.forEach(team => {
+      const opt = document.createElement("option");
+      opt.value = team.team_name;
+      opt.text = team.team_name;
+      chatDropdown.appendChild(opt);
+    });
+  }
 }
 
 /* ============================================================
@@ -1001,6 +1093,78 @@ function displayProgressForTeam(teamName) {
           container.appendChild(entry);
         });
       }
+
+      const socket = io();
+
+// join room when team selected
+function joinChat(team) {
+  socket.emit("join", { team_name: team });
+}
+
+// send message
+function sendMessage() {
+  const msg = document.getElementById("chatInput").value;
+  const team = document.getElementById("chatTeamSelect").value;
+
+  socket.emit("send_message", {
+    team_name: team,
+    message: msg,
+    sender: "faculty"
+  });
+
+  document.getElementById("chatInput").value = "";
+}
+
+// receive message
+socket.on("receive_message", (data) => {
+  const box = document.getElementById("chatBox");
+
+  const div = document.createElement("div");
+    div.classList.add("message", data.sender);
+
+    div.innerHTML = `
+      <div class="sender">${data.sender}</div>
+      <div>${data.message}</div>
+    `;
+
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+
+    });
+
+document.getElementById("chatTeamSelect").addEventListener("change", function () {
+  const team = this.value;
+
+  console.log("FACULTY JOIN:", team);
+
+  socket.emit("join", { team_name: team });
+  loadOldMessages(team); 
+});
+
+
+async function loadOldMessages(team) {
+  if (!team) return;
+
+  const res = await fetch(`/api/chat/${team}`);
+  const messages = await res.json();
+
+  const box = document.getElementById("chatBox");
+      box.innerHTML = "";
+
+      messages.forEach(m => {
+        const div = document.createElement("div");
+    div.classList.add("message", m.sender);
+
+    div.innerHTML = `
+      <div class="sender">${m.sender}</div>
+      <div>${m.message}</div>
+    `;
+
+    box.appendChild(div);
+      });
+
+  box.scrollTop = box.scrollHeight;
+}
 /* ============================================================
    INITIALIZE DASHBOARD
    ============================================================ */

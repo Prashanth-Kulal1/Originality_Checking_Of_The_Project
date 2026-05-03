@@ -106,6 +106,95 @@
       .left-panel, .right-panel { flex: none; width: 100%; height: 50vh; }
       .form-container { margin-top: -50px; }
     }
+
+      /* GOOGLE BUTTON */
+      .google-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        padding: 14px;
+        margin-top: 15px;
+        border-radius: 12px;
+        background: #fff;
+        color: #333;
+        font-weight: 600;
+        font-size: 15px;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+      }
+
+      /* GOOGLE LOGO */
+      .google-btn img {
+        width: 22px;
+        height: 22px;
+      }
+
+      /* HOVER EFFECT */
+      .google-btn:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      }
+
+      /* CLICK EFFECT */
+      .google-btn:active {
+        transform: scale(0.97);
+      }
+
+      /* GLOW ANIMATION */
+      .google-btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -75%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(
+          120deg,
+          transparent,
+          rgba(255,255,255,0.6),
+          transparent
+        );
+        transform: skewX(-25deg);
+      }
+
+      /* ANIMATION LOOP */
+      .google-btn:hover::before {
+        animation: shine 1s ease forwards;
+      }
+
+      @keyframes shine {
+        100% {
+          left: 125%;
+        }
+      }
+
+      /* COLOR STRIP GLOW (Google Colors) */
+      .google-btn::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          #4285F4,
+          #EA4335,
+          #FBBC05,
+          #34A853
+        );
+        animation: flow 3s linear infinite;
+      }
+
+      @keyframes flow {
+        0% { background-position: 0%; }
+        100% { background-position: 200%; }
+      }
   </style>
 </head>
 <body>
@@ -143,8 +232,12 @@
           <p>Don’t have an account? <a href="index.html">Register here</a></p>
         </div>
       </form>
+      <a href="/login/google?prompt=select_account" class="google-btn">
+        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo">
+        Continue with Google
+      </a>
     </div>
-  </div>
+  </div>z
 
   <script>
     document.getElementById("loginForm").addEventListener("submit", async function(e){

@@ -254,8 +254,281 @@
         from { opacity: 0; }
         to { opacity: 1; }
     }
+
+    :root{
+  --bg1:#06111f;
+  --bg2:#0f172a;
+  --glass:rgba(255,255,255,.06);
+  --stroke:rgba(255,255,255,.10);
+  --text:#e5eefc;
+  --muted:#94a3b8;
+  --accent1:#6366f1;
+  --accent2:#06b6d4;
+  --green:#22c55e;
+  --red:#ef4444;
+  --gold:#f59e0b;
+}
+
+/* ===== MAIN CARD ===== */
+.premium-analytics-card{
+  position:relative;
+  overflow:hidden;
+  border-radius:32px;
+  padding:30px;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(99,102,241,.18), transparent 28%),
+    radial-gradient(circle at 85% 18%, rgba(6,182,212,.18), transparent 28%),
+    radial-gradient(circle at 50% 100%, rgba(34,197,94,.10), transparent 30%),
+    linear-gradient(135deg,var(--bg1),var(--bg2),#111827);
+  box-shadow:
+    0 30px 70px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  animation:fadeRise .8s ease;
+}
+
+/* moving glow lines */
+.premium-analytics-card::before,
+.premium-analytics-card::after{
+  content:"";
+  position:absolute;
+  inset:auto;
+  width:280px;
+  height:280px;
+  border-radius:50%;
+  filter:blur(65px);
+  opacity:.25;
+  pointer-events:none;
+}
+.premium-analytics-card::before{
+  background:#6366f1;
+  top:-80px;
+  right:-50px;
+  animation:floatBlob 8s ease-in-out infinite;
+}
+.premium-analytics-card::after{
+  background:#06b6d4;
+  bottom:-70px;
+  left:-60px;
+  animation:floatBlob 10s ease-in-out infinite reverse;
+}
+
+@keyframes floatBlob{
+  0%,100%{transform:translateY(0) translateX(0);}
+  50%{transform:translateY(-25px) translateX(20px);}
+}
+
+@keyframes fadeRise{
+  from{opacity:0;transform:translateY(18px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* ===== HEADER ===== */
+.analytics-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+  margin-bottom:26px;
+  position:relative;
+  z-index:2;
+}
+
+.analytics-header h2{
+  font-size:30px;
+  color:#fff;
+  letter-spacing:.3px;
+}
+
+.analytics-header p{
+  color:var(--muted);
+  margin-top:6px;
+}
+
+.live-pill{
+  padding:10px 16px;
+  border-radius:999px;
+  background:var(--glass);
+  border:1px solid var(--stroke);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#fff;
+  backdrop-filter:blur(14px);
+}
+
+.pulse-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:#22c55e;
+  box-shadow:0 0 0 rgba(34,197,94,.7);
+  animation:pulseDot 1.6s infinite;
+}
+
+@keyframes pulseDot{
+  0%{box-shadow:0 0 0 0 rgba(34,197,94,.6);}
+  70%{box-shadow:0 0 0 10px rgba(34,197,94,0);}
+  100%{box-shadow:0 0 0 0 rgba(34,197,94,0);}
+}
+
+/* ===== KPI GRID ===== */
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:18px;
+  margin-bottom:26px;
+  position:relative;
+  z-index:2;
+}
+
+.stat-card{
+  position:relative;
+  padding:22px;
+  border-radius:24px;
+  background:var(--glass);
+  border:1px solid var(--stroke);
+  backdrop-filter:blur(18px);
+  overflow:hidden;
+  transition:.35s ease;
+}
+
+.stat-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg,transparent,rgba(255,255,255,.08),transparent);
+  transform:translateX(-120%);
+  transition:.6s;
+}
+
+.stat-card:hover::before{
+  transform:translateX(120%);
+}
+
+.stat-card:hover{
+  transform:translateY(-8px) scale(1.02);
+  box-shadow:0 18px 35px rgba(0,0,0,.25);
+}
+
+.stat-card small{
+  color:var(--muted);
+}
+
+.stat-card h1{
+  color:#fff;
+  font-size:38px;
+  margin:10px 0 6px;
+}
+
+.stat-card .sub{
+  color:#38bdf8;
+  font-size:13px;
+}
+
+/* ===== CHART GRID ===== */
+.charts-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:18px;
+  margin-bottom:26px;
+  position:relative;
+  z-index:2;
+}
+
+.chart-card{
+  background:var(--glass);
+  border:1px solid var(--stroke);
+  backdrop-filter:blur(18px);
+  border-radius:28px;
+  padding:24px;
+  min-height:430px;
+  transition:.35s ease;
+}
+
+.chart-card:hover{
+  transform:translateY(-6px);
+}
+
+.chart-card.full{
+  grid-column:1/-1;
+  min-height:380px;
+}
+
+.chart-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.chart-top h3{
+  color:#fff;
+  font-size:19px;
+}
+
+.chart-top span{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.chart-card canvas{
+  width:100% !important;
+  height:310px !important;
+}
+
+/* ===== BOTTOM CARDS ===== */
+.bottom-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr;
+  gap:18px;
+  position:relative;
+  z-index:2;
+}
+
+.hero-card,
+.mini-card{
+  border-radius:28px;
+  padding:24px;
+}
+
+.hero-card{
+  color:#fff;
+  background:linear-gradient(135deg,#6366f1,#06b6d4);
+  box-shadow:0 20px 40px rgba(99,102,241,.28);
+}
+
+.hero-card h1{
+  font-size:34px;
+  margin:10px 0;
+}
+
+.mini-card{
+  background:var(--glass);
+  border:1px solid var(--stroke);
+  backdrop-filter:blur(18px);
+}
+
+.mini-card small{
+  color:var(--muted);
+}
+
+.mini-card h2{
+  color:#fff;
+  font-size:34px;
+  margin:12px 0;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1100px){
+  .charts-grid,
+  .bottom-grid{
+    grid-template-columns:1fr;
+  }
+  .chart-card.full{
+    grid-column:auto;
+  }
+}
     
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -266,6 +539,7 @@
     <button onclick="showSection('progress')">🚀 Progress Monitoring</button>
     <button onclick="showSection('marks')">🏆 Marks & Evaluation</button>
     <button onclick="showSection('allocation')">🧩 Auto Allocation</button>
+    <button onclick="showSection('analytics'); loadAnalytics();">📈 Analytics</button>
     <button onclick="logout()">🚪 Logout</button>
   </div>
 
@@ -333,6 +607,76 @@
       <label style="font-weight:600;">Team:</label>
       <select id="teamSelect" style="max-width:300px;"></select>
       <div id="marksContainer"></div>
+    </div>
+
+    <div class="card premium-analytics-card" id="analytics">
+      <div class="analytics-header">
+        <div>
+          <h2>📈 Executive Analytics Dashboard</h2>
+          <p>Live insights, faculty load, approvals & progress intelligence.</p>
+        </div>
+        <div class="live-pill">
+          <span class="pulse-dot"></span>
+          Live Data
+        </div>
+      </div>
+
+      <!-- Floating decorative blobs -->
+      <div class="blob blob1"></div>
+      <div class="blob blob2"></div>
+
+      <!-- KPI Cards -->
+      <div id="analyticsContent" class="stats-grid"></div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+
+        <div class="chart-card wide">
+          <div class="chart-top">
+            <h3>Idea Decisions</h3>
+            <span>Approval vs Rejection</span>
+          </div>
+          <canvas id="ideaChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-top">
+            <h3>Progress Status</h3>
+            <span>Uploads overview</span>
+          </div>
+          <canvas id="progressChart"></canvas>
+        </div>
+
+        <div class="chart-card full">
+          <div class="chart-top">
+            <h3>Allocation Overview</h3>
+            <span>Teams assigned vs pending</span>
+          </div>
+          <canvas id="allocationChart"></canvas>
+        </div>
+
+      </div>
+
+      <!-- Bottom Cards -->
+      <div class="bottom-grid">
+        <div class="hero-card" id="topTeamBox">
+          <small>🏆 Top Performing Team</small>
+          <h1>Loading...</h1>
+          <p>Highest evaluated project team.</p>
+        </div>
+
+        <div class="mini-card">
+          <small>Total Efficiency</small>
+          <h2 id="efficiencyRate">0%</h2>
+          <p>Based on allocations completed.</p>
+        </div>
+
+        <div class="mini-card">
+          <small>Idea Approval Rate</small>
+          <h2 id="approvalRate">0%</h2>
+          <p>Approved proposals ratio.</p>
+        </div>
+      </div>
     </div>
 
 
@@ -1028,6 +1372,190 @@ function escapeHtml(str) {
             closeReallocateModal();
         }
     }
+
+    let chartRefs = {};
+
+async function loadAnalytics(){
+
+  const res = await fetch('/api/analytics/dashboard');
+  const data = await res.json();
+
+  const approvalTotal = data.approved_ideas + data.rejected_ideas || 1;
+  const approvalRate = Math.round((data.approved_ideas / approvalTotal) * 100);
+
+  const efficiency = Math.round(
+    (data.allocated_teams / data.total_teams) * 100
+  );
+
+  document.getElementById("analyticsContent").innerHTML = `
+
+    <div class="stat-card">
+      <small>Total Teams</small>
+      <h1 class="count" data-target="${data.total_teams}">0</h1>
+      <div class="sub">Registered teams</div>
+    </div>
+
+    <div class="stat-card">
+      <small>Total Faculty</small>
+      <h1 class="count" data-target="${data.total_faculty}">0</h1>
+      <div class="sub">Mentors available</div>
+    </div>
+
+    <div class="stat-card">
+      <small>Allocated Teams</small>
+      <h1 class="count" data-target="${data.allocated_teams}">0</h1>
+      <div class="sub">Assignments completed</div>
+    </div>
+
+    <div class="stat-card">
+      <small>Pending Allocation</small>
+      <h1 class="count" data-target="${data.pending_allocation}">0</h1>
+      <div class="sub">Needs action</div>
+    </div>
+
+    <div class="stat-card">
+      <small>Approved Ideas</small>
+      <h1 class="count" data-target="${data.approved_ideas}">0</h1>
+      <div class="sub">Accepted proposals</div>
+    </div>
+
+    <div class="stat-card">
+      <small>Progress Uploaded</small>
+      <h1 class="count" data-target="${data.progress_uploaded}">0</h1>
+      <div class="sub">Submission activity</div>
+    </div>
+
+  `;
+
+  document.querySelector("#topTeamBox h1").innerText =
+    data.top_team?.team_name || "No Team";
+
+  document.getElementById("efficiencyRate").innerText = efficiency + "%";
+  document.getElementById("approvalRate").innerText = approvalRate + "%";
+
+  animateCounts();
+  buildCharts(data);
+}
+
+/* Counter Animation */
+function animateCounts(){
+  document.querySelectorAll('.count').forEach(el=>{
+    let target = +el.dataset.target;
+    let count = 0;
+    let step = Math.max(1, target/45);
+
+    const run=()=>{
+      count += step;
+      if(count < target){
+        el.innerText = Math.ceil(count);
+        requestAnimationFrame(run);
+      }else{
+        el.innerText = target;
+      }
+    }
+    run();
+  });
+}
+
+/* Destroy old charts */
+function clearCharts(){
+  for(let key in chartRefs){
+    chartRefs[key].destroy();
+  }
+}
+
+function buildCharts(data){
+
+clearCharts();
+
+Chart.defaults.color="#dbeafe";
+Chart.defaults.font.family="Poppins";
+Chart.defaults.plugins.legend.labels.usePointStyle=true;
+Chart.defaults.plugins.legend.labels.padding=18;
+
+/* IDEA DONUT */
+chartRefs.idea = new Chart(document.getElementById("ideaChart"),{
+type:'doughnut',
+data:{
+labels:['Approved','Rejected'],
+datasets:[{
+data:[data.approved_ideas,data.rejected_ideas],
+backgroundColor:[
+'rgba(34,197,94,.95)',
+'rgba(239,68,68,.95)'
+],
+borderWidth:0,
+hoverOffset:18
+}]
+},
+options:{
+cutout:'72%',
+plugins:{legend:{position:'bottom'}},
+animation:{
+duration:2200,
+easing:'easeOutElastic'
+}
+}
+});
+
+/* PROGRESS PIE */
+chartRefs.progress = new Chart(document.getElementById("progressChart"),{
+type:'pie',
+data:{
+labels:['Uploaded','Pending'],
+datasets:[{
+data:[data.progress_uploaded,data.no_progress],
+backgroundColor:[
+'rgba(6,182,212,.95)',
+'rgba(148,163,184,.85)'
+],
+borderWidth:0,
+hoverOffset:14
+}]
+},
+options:{
+plugins:{legend:{position:'bottom'}},
+animation:{duration:2000}
+}
+});
+
+/* BAR */
+chartRefs.allocate = new Chart(document.getElementById("allocationChart"),{
+type:'bar',
+data:{
+labels:['Allocated','Pending'],
+datasets:[{
+data:[data.allocated_teams,data.pending_allocation],
+backgroundColor:[
+'rgba(99,102,241,.95)',
+'rgba(245,158,11,.95)'
+],
+borderRadius:18,
+barThickness:85
+}]
+},
+options:{
+plugins:{legend:{display:false}},
+scales:{
+y:{
+beginAtZero:true,
+grid:{color:'rgba(255,255,255,.08)'},
+ticks:{color:'#cbd5e1'}
+},
+x:{
+grid:{display:false},
+ticks:{color:'#cbd5e1'}
+}
+},
+animation:{
+duration:2400,
+easing:'easeOutBounce'
+}
+}
+});
+
+}
+
 
     // Load monitor section on startup
     document.addEventListener('DOMContentLoaded', () => {

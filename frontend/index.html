@@ -213,6 +213,22 @@ document.querySelector("#facultyForm").addEventListener("submit", async e => {
   document.getElementById("facultyForm").reset(); // for faculty form
 
 });
+
+const params = new URLSearchParams(window.location.search);
+
+const email = params.get("email");
+const name = params.get("name");
+
+if (email) {
+  document.getElementById("leaderEmail").value = email;
+  document.getElementById("facultyEmail").value = email;
+}
+
+if (name) {
+  document.getElementById("leaderName").value = name;
+  document.getElementById("facultyName").value = name;
+}
+
 </script>
 
 </body>

@@ -1,3 +1,6 @@
+from flask_dance.contrib.google import make_google_blueprint, google
+from flask import redirect, url_for, request
+import os, jwt
 import os # <--- FIXED IMPORT ORDER
 from flask import Flask, request, jsonify, send_from_directory
 from flask_pymongo import PyMongo
@@ -7,7 +10,7 @@ from werkzeug.utils import secure_filename # CRITICAL for file upload security
 import jwt
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
-
+from flask_socketio import SocketIO, emit, join_room
 
 # -------------------- Load Environment Variables -------------------- #
 load_dotenv()
@@ -18,6 +21,8 @@ frontend_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 
 # Configure Flask
 app = Flask(__name__, static_folder=frontend_folder, static_url_path='/')
 CORS(app)
+
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 # -------------------- Configuration -------------------- #
 app.config["MONGO_URI"] = os.getenv("MONGO_URI")
@@ -51,6 +56,77 @@ def serve_static_files(filename):
 # ==================================================================== #
 #                       REGISTRATION ROUTES                            #
 # ==================================================================== #
+from flask_dance.contrib.google import google
+from flask import redirect, request
+
+@app.route("/login/success")
+def google_login_success():
+    if not google.authorized:
+        return redirect("/login")
+
+    resp = google.get("/oauth2/v2/userinfo")
+    user_info = resp.json()
+
+    email = user_info.get("email")
+    name = user_info.get("name")
+
+    # Check TEAM
+    user = mongo.db.teams.find_one({"leader_email": email})
+    if user:
+        role = "team"
+        token = jwt.encode({"email": email, "role": role}, app.config["SECRET_KEY"], algorithm="HS256")
+        return redirect(f"/team-dasboard.html?token={token}")
+
+    # Check FACULTY
+    user = mongo.db.faculty.find_one({"email": email})
+    if user:
+        role = "faculty"
+        token = jwt.encode({"email": email, "role": role}, app.config["SECRET_KEY"], algorithm="HS256")
+        return redirect(f"/faculty-dashboard.html?token={token}")
+
+    # ❌ New user → go to registration
+    return redirect(f"/index.html?email={email}&name={name}")
+    
+
+google_bp = make_google_blueprint(
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    scope=[
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile"
+    ],
+    redirect_url="/login/success"
+)
+
+
+app.register_blueprint(google_bp, url_prefix="/login")
+
+@app.route("/api/login/team", methods=["POST"])
+def team_login():
+    data = request.json
+
+    user = mongo.db.teams.find_one({
+        "leader_email": data["email"],
+        "leader_password": data["password"]
+    })
+
+    if not user:
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    token = jwt.encode({
+        "email": user["leader_email"],
+        "role": "team"
+    }, app.config["SECRET_KEY"], algorithm="HS256")
+
+    return jsonify({
+        "message": "Login successful",
+        "token": token,
+        "leader_name": user["leader_name"]   # ⭐ IMPORTANT
+    })
+
+
+
 
 @app.route('/api/register/team', methods=['POST'])
 def register_team():
@@ -1272,10 +1348,137 @@ def manual_reallocate():
     except Exception as e:
         print("Error in manual reallocation:", e)
         return jsonify({"error": "Internal server error"}), 500
+
+
+# ==================================================================== #
+# ANALYTICS DASHBOARD ROUTE
+# ==================================================================== #
+
+@app.route('/api/analytics/dashboard', methods=['GET'])
+def analytics_dashboard():
+    try:
+        total_teams = db.teams.count_documents({})
+        total_faculty = db.faculty.count_documents({})
+
+        allocated_teams = db.teams.count_documents({
+            "faculty_email": {"$ne": None}
+        })
+
+        pending_allocation = total_teams - allocated_teams
+
+        submitted_ideas = db.teams.count_documents({
+            "project_idea": {"$exists": True}
+        })
+
+        approved_ideas = db.teams.count_documents({
+            "project_idea.status": "Approved"
+        })
+
+        rejected_ideas = db.teams.count_documents({
+            "project_idea.status": "Rejected"
+        })
+
+        progress_uploaded = db.teams.count_documents({
+            "progress.0": {"$exists": True}
+        })
+
+        no_progress = total_teams - progress_uploaded
+
+        # Faculty workload
+        faculty_load = list(db.teams.aggregate([
+            {
+                "$group": {
+                    "_id": "$faculty_name",
+                    "teams": {"$sum": 1}
+                }
+            }
+        ]))
+
+        # Average marks
+        all_teams = list(db.teams.find({}, {"team_name":1, "marks":1}))
+
+        marks_data = []
+
+        for team in all_teams:
+            total = 0
+            count = 0
+
+            for exam in team.get("marks", []):
+                for m in exam.get("members_marks", []):
+                    total += int(m.get("marks", 0))
+                    count += 1
+
+            avg = round(total / count, 2) if count > 0 else 0
+
+            marks_data.append({
+                "team_name": team["team_name"],
+                "average": avg
+            })
+
+        top_team = max(marks_data, key=lambda x: x["average"], default={})
+        low_team = min(marks_data, key=lambda x: x["average"], default={})
+
+        return jsonify({
+            "total_teams": total_teams,
+            "total_faculty": total_faculty,
+            "allocated_teams": allocated_teams,
+            "pending_allocation": pending_allocation,
+            "submitted_ideas": submitted_ideas,
+            "approved_ideas": approved_ideas,
+            "rejected_ideas": rejected_ideas,
+            "progress_uploaded": progress_uploaded,
+            "no_progress": no_progress,
+            "faculty_load": faculty_load,
+            "top_team": top_team,
+            "low_team": low_team
+        }), 200
+
+    except Exception as e:
+        print(e)
+        return jsonify({"error":"Analytics failed"}),500
     
+# ===================== CHAT SYSTEM ===================== #
+
+@socketio.on('join')
+def handle_join(data):
+    room = data['team_name']
+    join_room(room)
+
+@socketio.on('send_message')
+def handle_message(data):
+    team_name = data['team_name']
+    message = data['message']
+    sender = data['sender']
+
+    msg_data = {
+        "team_name": team_name,
+        "sender": sender,
+        "message": message,
+        "timestamp": datetime.now().isoformat()
+    }
+
+    # Save to DB
+    result = db.chats.insert_one(msg_data)
+
+    # ❗ REMOVE ObjectId BEFORE SENDING
+    msg_data["_id"] = str(result.inserted_id)
+
+    # Send message
+    emit('receive_message', msg_data, room=team_name)
+
+
+# OPTIONAL: Load old messages
+@app.route('/api/chat/<team_name>', methods=['GET'])
+def get_chat(team_name):
+    chats = list(db.chats.find({"team_name": team_name}, {"_id": 0}))
+    return jsonify(chats)
+    
+
+
+
 # ==================================================================== #
 #                       RUN SERVER                                     #
 # ==================================================================== #
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app, debug=True, use_reloader=False)
