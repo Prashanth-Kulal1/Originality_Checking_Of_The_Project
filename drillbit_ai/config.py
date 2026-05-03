@@ -1,3 +1,0 @@
-MAX_CHUNKS = 3
-SIMILARITY_THRESHOLD = 30
-REPORT_PATH = "outputs/reports/"
