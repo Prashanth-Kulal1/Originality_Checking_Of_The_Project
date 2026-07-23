@@ -1106,7 +1106,7 @@ class MockDB:
 
 # --- GEMINI API CONFIGURATION & SETUP ---
 GEMINI_API_KEY = ""
-GEMINI_API_URL="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+GEMINI_API_URL=""
 
 
 MAX_RETRIES = 5
